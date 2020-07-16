@@ -10,6 +10,18 @@ function Ball:init(x, y, width, height)
     self.dy = math.random(-50, 50)
 end
 
+function Ball:collides(box)
+    if self.x > box.x + box.width or self.x + self.width < box.x then
+        return false
+    end
+    
+    if self.y > box.y + box.height or self.y + self.height < box.y then
+        return false
+    end
+
+    return true
+end
+
 function Ball:reset(x, y)
     self.x = x-- VIRTUAL_WIDTH / 2 - 2
     self.y = y-- VIRTUAL_HEIGHT / 2 - 2
@@ -41,6 +53,6 @@ function Ball:render()
             Returns
                 Nothing.
     ]]
-    
+
     love.graphics.rectangle('fill', self.x, self.y, 5, 5)
 end

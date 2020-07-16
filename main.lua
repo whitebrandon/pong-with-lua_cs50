@@ -59,6 +59,8 @@ function love.load()
 
     love.graphics.setDefaultFilter('nearest', 'nearest')
 
+    love.window.setTitle("Pong")
+
     smallFont = love.graphics.newFont('font.ttf', 8)
 
     scoreFont = love.graphics.newFont('font.ttf', 32)
@@ -85,8 +87,26 @@ end
 
 function love.update(dt) -- dt stands for delta time
 
-    paddle1:update(dt) -- updates player 1 movement
-    paddle2:update(dt) -- updates player 2 movement
+    if ball:collides(paddle1) then
+        -- deflect ball to the right
+        ball.dx = -ball.dx
+    end
+
+    if ball:collides(paddle2) then
+        -- deflect ball to the left
+        ball.dx = -ball.dx
+    end
+
+    if ball.y <= 0 then
+        -- deflect the ball down
+        ball.dy = -ball.dy
+        ball.y = 0
+    end
+
+    if ball.y >= VIRTUAL_HEIGHT - 5 then
+        ball.dy = -ball.dy
+        ball.y = ball.y - 5
+    end
 
     -- calculates player 1 movement
     if love.keyboard.isDown('w') then
@@ -105,6 +125,9 @@ function love.update(dt) -- dt stands for delta time
     else
         paddle2.dy = 0
     end
+
+    paddle1:update(dt) -- updates player 1 movement
+    paddle2:update(dt) -- updates player 2 movement
 
     -- ball movement
     if gameState == 'play' then
@@ -168,5 +191,13 @@ function love.draw()
         -- render second paddle (right side)
         paddle2:render()
 
+        displayFPS()
+
     push:apply('end')
+end
+
+function displayFPS()
+    love.graphics.setFont(smallFont)
+    love.graphics.setColor(0, 1, 0, 1)
+    love.graphics.print("FPS: " .. tostring(love.timer.getFPS()))
 end
