@@ -87,6 +87,19 @@ end
 
 function love.update(dt) -- dt stands for delta time
 
+    if gameState == 'play' then
+
+        if ball.x <= 0 then
+            player2Score = player2Score + 1
+            ball:reset(BALL_START_X, BALL_START_Y)
+        end
+
+        if ball.x >= VIRTUAL_WIDTH - 5 then
+            player1Score = player1Score + 1
+            ball:reset(BALL_START_X, BALL_START_Y)
+        end
+    end
+
     if ball:collides(paddle1) then
         -- deflect ball to the right
         ball.dx = -ball.dx
