@@ -23,7 +23,16 @@
 -- a more retro aesthetic
 --
 -- https://github.com/Ulydev/push
+
+
+-- Imports
+Class = require 'class'
 push = require 'push'
+
+require 'Ball'
+require 'Paddle'
+
+-- Constants
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -32,6 +41,9 @@ VIRTUAL_WIDTH = 432
 VIRTUAL_HEIGHT = 243
 
 PADDLE_SPEED = 200
+
+BALL_START_X = VIRTUAL_WIDTH / 2 - 2
+BALL_START_Y = VIRTUAL_HEIGHT / 2 - 2
 
 --[[ 
     Runs when the game first starts up, only once; used to initialize the game.
@@ -42,6 +54,7 @@ function love.load()
         vsync = true,
         resizable = false
     }) ]]
+
     math.randomseed(os.time())
 
     love.graphics.setDefaultFilter('nearest', 'nearest')
@@ -50,21 +63,19 @@ function love.load()
 
     scoreFont = love.graphics.newFont('font.ttf', 32)
 
+    -- initializes player scores to 0
     player1Score = 0
     player2Score = 0
 
-    player1Y = 30
-    player2Y = VIRTUAL_HEIGHT - 50
+    -- creates Paddles instances
+    paddle1 = Paddle(10, 30, 5, 20)
+    paddle2 = Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 50, 5, 20)
 
-    ballX = VIRTUAL_WIDTH / 2 - 2
-    ballY = VIRTUAL_HEIGHT / 2 - 2
-
-    ballDX = math.random(2) == 1 and -100 or 100 -- similar to a ternary
-    ballDY = math.random(-50, 50)
+    -- creates Ball instance
+    ball = Ball(BALL_START_X, BALL_START_Y, 5, 5)
 
     gameState = 'start'
 
-    -- love.graphics.setFont(smallFont)
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,
         vsync = true,
@@ -73,21 +84,31 @@ function love.load()
 end
 
 function love.update(dt) -- dt stands for delta time
+
+    paddle1:update(dt) -- updates player 1 movement
+    paddle2:update(dt) -- updates player 2 movement
+
+    -- calculates player 1 movement
     if love.keyboard.isDown('w') then
-        player1Y = math.max(0, player1Y - PADDLE_SPEED * dt)
+        paddle1.dy = -PADDLE_SPEED 
     elseif love.keyboard.isDown('s') then
-        player1Y = math.min(VIRTUAL_HEIGHT - 20, player1Y + PADDLE_SPEED * dt)
+        paddle1.dy = PADDLE_SPEED
+    else
+        paddle1.dy = 0
     end
 
+    -- calculates player 2 movement
     if love.keyboard.isDown('up') then
-        player2Y = math.max(0, player2Y - PADDLE_SPEED * dt)
+        paddle2.dy = -PADDLE_SPEED 
     elseif love.keyboard.isDown('down') then
-        player2Y = math.min(VIRTUAL_HEIGHT - 20, player2Y + PADDLE_SPEED * dt)
+        paddle2.dy = PADDLE_SPEED
+    else
+        paddle2.dy = 0
     end
 
+    -- ball movement
     if gameState == 'play' then
-        ballX = ballX + ballDX * dt
-        ballY = ballY + ballDY * dt
+        ball:update(dt)
     end
 end
 
@@ -95,16 +116,12 @@ function love.keypressed(key)
     if key == 'escape' then
         love.event.quit()
     elseif key == 'enter' or key == 'return' then
+        -- TOGGLES gamestate
         if gameState == 'start' then
             gameState = 'play'
         elseif gameState == 'play' then
             gameState = 'start'
-
-            ballX = VIRTUAL_WIDTH / 2 - 2
-            ballY = VIRTUAL_HEIGHT / 2 - 2
-
-            ballDX = math.random(2) == 1 and -100 or 100 -- similar to a ternary
-            ballDY = math.random(-50, 50)
+            ball:reset(BALL_START_X, BALL_START_Y)
         end
     end
 end
@@ -117,59 +134,39 @@ end
 function love.draw()
     push:apply('start')
 
-    love.graphics.clear(40 / 255, 45 / 255, 52 / 255, 255 / 255) -- creates a grey-ish game screen
+        love.graphics.clear(40 / 255, 45 / 255, 52 / 255, 255 / 255) -- creates a grey-ish game screen
 
-    love.graphics.setFont(smallFont)
-    if gameState == 'start' then
-        love.graphics.printf(
-            "Hello Pong!",          -- text to render
-            0,                      -- starting X (0 since we're going to center it based on width)
-            20,                     -- starting Y (20 pixels down the screen)
-            VIRTUAL_WIDTH,          -- number of pixels to center within (the entire screen here)
-            'center')               -- alignment mode, can be 'center', 'left', 'right'
-    elseif gameState == 'play' then
-        love.graphics.printf(
-            "Hello Play State!",          -- text to render
-            0,                      -- starting X (0 since we're going to center it based on width)
-            20,                     -- starting Y (20 pixels down the screen)
-            VIRTUAL_WIDTH,          -- number of pixels to center within (the entire screen here)
-            'center')  
-    end
+        -- ============== PRINTS BANNER MESSAGE DEPENDING ON GAME STATE ================== --
+        love.graphics.setFont(smallFont)
 
-    love.graphics.setFont(scoreFont)
-    love.graphics.print(player1Score, VIRTUAL_WIDTH / 2 - 50, VIRTUAL_HEIGHT / 3)
-    love.graphics.print(player2Score, VIRTUAL_WIDTH / 2 + 30, VIRTUAL_HEIGHT / 3)
+        if gameState == 'start' then
+            love.graphics.printf(
+                "Hello Pong!",          -- text to render
+                0,                      -- starting X (0 since we're going to center it based on width)
+                20,                     -- starting Y (20 pixels down the screen)
+                VIRTUAL_WIDTH,          -- number of pixels to center within (the entire screen here)
+                'center')               -- alignment mode, can be 'center', 'left', 'right'
+        elseif gameState == 'play' then
+            love.graphics.printf(
+                "Hello Play State!",
+                0,
+                20,
+                VIRTUAL_WIDTH,
+                'center')  
+        end
 
-    -- renders ball, center
-    love.graphics.rectangle('fill', ballX, ballY, 5, 5)
+        -- =========================== PRINTS PLAYER SCORES ============================== --
+        love.graphics.setFont(scoreFont) -- resets font
+        love.graphics.print(player1Score, VIRTUAL_WIDTH / 2 - 50, VIRTUAL_HEIGHT / 3)
+        love.graphics.print(player2Score, VIRTUAL_WIDTH / 2 + 30, VIRTUAL_HEIGHT / 3)
 
-    -- =========================== RENDER THE PADDLES ============================== --
-
-    -- love.graphics.rectangle( mode, x, y, width, height )
-
-    --[[ 
-        Arguments
-            DrawMode mode
-                How to draw the rectangle.
-            number x
-                The position of top-left corner along the x-axis.
-            number y
-                The position of top-left corner along the y-axis.
-            number width
-                Width of the rectangle.
-            number height
-                Height of the rectangle.
-            Returns
-                Nothing.
-     ]]
-
---[[      player1Y = 30
-     player2Y = VIRTUAL_HEIGHT - 50 ]]
-
-    -- render first paddle (left side)
-    love.graphics.rectangle('fill', 10, player1Y, 5, 20) -- 
-    -- render second paddle (right side)
-    love.graphics.rectangle('fill', VIRTUAL_WIDTH - 10, player2Y, 5, 20) --
+        -- =========================== RENDER GAME OBJECTS ============================== --
+        -- renders ball, center
+        ball:render()
+        -- render first paddle (left side)
+        paddle1:render()
+        -- render second paddle (right side)
+        paddle2:render()
 
     push:apply('end')
 end
