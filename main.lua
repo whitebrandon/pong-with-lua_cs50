@@ -98,53 +98,71 @@ function love.update(dt) -- dt stands for delta time
             player1Score = player1Score + 1
             ball:reset(BALL_START_X, BALL_START_Y)
         end
-    end
 
-    if ball:collides(paddle1) then
-        -- deflect ball to the right
-        ball.dx = -ball.dx
-    end
+        -- detect ball collision with paddles, reversing dx if true and
+        -- slightly increasing it, then altering the dy based on the position of collision
+        if ball:collides(paddle1) then
+            -- deflect ball to the right
+            ball.dx = -ball.dx * 1.03
+            ball.x = paddle1.x + 5
 
-    if ball:collides(paddle2) then
-        -- deflect ball to the left
-        ball.dx = -ball.dx
-    end
+            -- keep velocity going in the same direction, but randomize it
+            if ball.dy < 0 then
+                ball.dy = -math.random(10, 150)
+            else
+                ball.dy = math.random(10, 150)
+            end
+        end
 
-    if ball.y <= 0 then
-        -- deflect the ball down
-        ball.dy = -ball.dy
-        ball.y = 0
-    end
+        if ball:collides(paddle2) then
+            -- deflect ball to the left
+            ball.dx = -ball.dx * 1.03
+            ball.x = paddle2.x - 5
 
-    if ball.y >= VIRTUAL_HEIGHT - 5 then
-        ball.dy = -ball.dy
-        ball.y = ball.y - 5
-    end
+            -- keep velocity going in the same direction, but randomize it
+            if ball.dy < 0 then
+                ball.dy = -math.random(10, 150)
+            else
+                ball.dy = math.random(10, 150)
+            end
+        end
 
-    -- calculates player 1 movement
-    if love.keyboard.isDown('w') then
-        paddle1.dy = -PADDLE_SPEED 
-    elseif love.keyboard.isDown('s') then
-        paddle1.dy = PADDLE_SPEED
-    else
-        paddle1.dy = 0
-    end
+        if ball.y <= 0 then
+            -- deflect the ball down
+            ball.dy = -ball.dy
+            ball.y = 0
+        end
 
-    -- calculates player 2 movement
-    if love.keyboard.isDown('up') then
-        paddle2.dy = -PADDLE_SPEED 
-    elseif love.keyboard.isDown('down') then
-        paddle2.dy = PADDLE_SPEED
-    else
-        paddle2.dy = 0
-    end
+        if ball.y >= VIRTUAL_HEIGHT - 5 then
+            ball.dy = -ball.dy
+            ball.y = ball.y - 5
+        end
 
-    paddle1:update(dt) -- updates player 1 movement
-    paddle2:update(dt) -- updates player 2 movement
+        -- calculates player 1 movement
+        if love.keyboard.isDown('w') then
+            paddle1.dy = -PADDLE_SPEED 
+        elseif love.keyboard.isDown('s') then
+            paddle1.dy = PADDLE_SPEED
+        else
+            paddle1.dy = 0
+        end
 
-    -- ball movement
-    if gameState == 'play' then
-        ball:update(dt)
+        -- calculates player 2 movement
+        if love.keyboard.isDown('up') then
+            paddle2.dy = -PADDLE_SPEED 
+        elseif love.keyboard.isDown('down') then
+            paddle2.dy = PADDLE_SPEED
+        else
+            paddle2.dy = 0
+        end
+
+        paddle1:update(dt) -- updates player 1 movement
+        paddle2:update(dt) -- updates player 2 movement
+
+        -- ball movement
+        if gameState == 'play' then
+            ball:update(dt)
+        end
     end
 end
 
@@ -175,7 +193,7 @@ function love.draw()
         -- ============== PRINTS BANNER MESSAGE DEPENDING ON GAME STATE ================== --
         love.graphics.setFont(smallFont)
 
-        if gameState == 'start' then
+        --[[ if gameState == 'start' then
             love.graphics.printf(
                 "Hello Pong!",          -- text to render
                 0,                      -- starting X (0 since we're going to center it based on width)
@@ -189,7 +207,7 @@ function love.draw()
                 20,
                 VIRTUAL_WIDTH,
                 'center')  
-        end
+        end ]]
 
         -- =========================== PRINTS PLAYER SCORES ============================== --
         love.graphics.setFont(scoreFont) -- resets font
