@@ -6,7 +6,11 @@ function Ball:init(x, y, width, height)
     self.width = width
     self.height = height
 
+    -- delta x means change in x (ie. determines direction and speed that ball moves along x axis)
+    -- this is because on each update the ball will be redrawn at self.x plus self.dx (multplied by delta time)
     self.dx = math.random(2) == 1 and 100 or -100 
+    -- delta y means change in y (ie. determines direction and speed that ball moves along y axis)
+    -- this is because on each update the ball will be redrawn at self.y plus self.dy (multplied by delta time)
     self.dy = math.random(-50, 50)
 end
 
@@ -31,6 +35,7 @@ function Ball:reset(x, y)
 end
 
 function Ball:update(dt)
+    -- (x, y) of ball is redrawn at (x + dx * dt, y + dy * dt)
     self.x = self.x + self.dx * dt
     self.y = self.y + self.dy * dt
 end

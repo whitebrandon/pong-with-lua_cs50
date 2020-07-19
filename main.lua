@@ -69,12 +69,21 @@ function love.load()
     player1Score = 0
     player2Score = 0
 
+    -- x = a (?/and) b (:/or) c | if math.random() generates 1, then servingPlayer is 1 else servingPlayer is 2
+    servingPlayer = math.random(2) -- == 1 and 1 or 2 
+
     -- creates Paddles instances
     paddle1 = Paddle(10, 30, 5, 20)
     paddle2 = Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 50, 5, 20)
 
     -- creates Ball instance
     ball = Ball(BALL_START_X, BALL_START_Y, 5, 5)
+
+    if servingPlayer == 1 then
+        ball.dx = 100
+    else
+        ball.dx = -100
+    end
 
     gameState = 'start'
 
@@ -89,14 +98,22 @@ function love.update(dt) -- dt stands for delta time
 
     if gameState == 'play' then
 
+        -- this denotes ball has exited screen left
         if ball.x <= 0 then
             player2Score = player2Score + 1
+            servingPlayer = 1
             ball:reset(BALL_START_X, BALL_START_Y)
+            ball.dx = 100
+            gameState = 'serve'
         end
 
+        -- this denotes ball has exited screen right
         if ball.x >= VIRTUAL_WIDTH - 5 then
             player1Score = player1Score + 1
+            servingPlayer = 2
             ball:reset(BALL_START_X, BALL_START_Y)
+            ball.dx = -100
+            gameState = 'serve'
         end
 
         -- detect ball collision with paddles, reversing dx if true and
@@ -172,10 +189,10 @@ function love.keypressed(key)
     elseif key == 'enter' or key == 'return' then
         -- TOGGLES gamestate
         if gameState == 'start' then
+            gameState = 'serve'
+        elseif gameState == 'serve' then
             gameState = 'play'
-        elseif gameState == 'play' then
-            gameState = 'start'
-            ball:reset(BALL_START_X, BALL_START_Y)
+            --ball:reset(BALL_START_X, BALL_START_Y) -- removing reset from here as it's set in update
         end
     end
 end
@@ -192,6 +209,14 @@ function love.draw()
 
         -- ============== PRINTS BANNER MESSAGE DEPENDING ON GAME STATE ================== --
         love.graphics.setFont(smallFont)
+
+        if gameState == 'start' then
+            love.graphics.printf("Welcome to Pong!", 0, 20, VIRTUAL_WIDTH, 'center')
+            love.graphics.printf("Press Enter to Play!", 0, 32, VIRTUAL_WIDTH, 'center')
+        elseif gameState == 'serve' then
+            love.graphics.printf("Player " .. tostring(servingPlayer) .. "'s serve" , 0, 20, VIRTUAL_WIDTH, 'center')
+            love.graphics.printf("Press Enter to Serve!", 0, 32, VIRTUAL_WIDTH, 'center')
+        end
 
         --[[ if gameState == 'start' then
             love.graphics.printf(
