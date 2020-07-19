@@ -67,6 +67,12 @@ function love.load()
 
     victoryFont = love.graphics.newFont('font.ttf', 24)
 
+    sounds = {
+        ['paddle_hit'] = love.audio.newSource('sounds/paddle_hit.wav', 'static'),
+        ['score'] = love.audio.newSource('sounds/score.wav', 'static'),
+        ['wall_hit'] = love.audio.newSource('sounds/wall_hit.wav', 'static')
+    }
+
     -- initializes player scores to 0
     player1Score = 0
     player2Score = 0
@@ -102,6 +108,7 @@ function love.update(dt) -- dt stands for delta time
 
         -- this denotes ball has exited screen left
         if ball.x <= 0 then
+            love.audio.play(sounds.score)
             player2Score = player2Score + 1
             servingPlayer = 1
             ball:reset(BALL_START_X, BALL_START_Y)
@@ -116,6 +123,7 @@ function love.update(dt) -- dt stands for delta time
 
         -- this denotes ball has exited screen right
         if ball.x >= VIRTUAL_WIDTH - 5 then
+            love.audio.play(sounds.score)
             player1Score = player1Score + 1
             servingPlayer = 2
             ball:reset(BALL_START_X, BALL_START_Y)
@@ -132,6 +140,8 @@ function love.update(dt) -- dt stands for delta time
         -- slightly increasing it, then altering the dy based on the position of collision
         if ball:collides(paddle1) then
             -- deflect ball to the right
+            -- love.audio.play(sounds.paddle_hit)
+            sounds['paddle_hit']:play()
             ball.dx = -ball.dx * 1.03
             ball.x = paddle1.x + 5
 
@@ -145,6 +155,7 @@ function love.update(dt) -- dt stands for delta time
 
         if ball:collides(paddle2) then
             -- deflect ball to the left
+            love.audio.play(sounds.paddle_hit)
             ball.dx = -ball.dx * 1.03
             ball.x = paddle2.x - 5
 
@@ -158,11 +169,13 @@ function love.update(dt) -- dt stands for delta time
 
         if ball.y <= 0 then
             -- deflect the ball down
+            love.audio.play(sounds.wall_hit)
             ball.dy = -ball.dy
             ball.y = 0
         end
 
         if ball.y >= VIRTUAL_HEIGHT - 5 then
+            love.audio.play(sounds.wall_hit)
             ball.dy = -ball.dy
             ball.y = ball.y - 5
         end
